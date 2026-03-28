@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            margin: 0;
+        }
+        canvas {
+            border: 1px solid white;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pong" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('pong');
+        const context = canvas.getContext('2d');
+
+        // Create the pong paddle
+        const paddleWidth = 10;
+        const paddleHeight = 100;
+
+        const player = {
+            x: 0,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            color: 'white',
+            score: 0,
+        };
+
+        const computer = {
+            x: canvas.width - paddleWidth,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            color: 'white',
+            score: 0,
+        };
+
+        // Create the pong ball
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 10,
+            speed: 4,
+            velocityX: 5,
+            velocityY: 5,
+            color: 'white',
+        };
+
+        // Draw everything to the canvas
+        function draw() {
+            // Clear the canvas
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            // Draw paddles
+            context.fillStyle = player.color;
+            context.fillRect(player.x, player.y, player.width, player.height);
+            context.fillStyle = computer.color;
+            context.fillRect(computer.x, computer.y, computer.width, computer.height);
+            // Draw ball
+            context.fillStyle = ball.color;
+            context.beginPath();
+            context.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2, false);
+            context.fill();
+            context.closePath();
+            // Draw scores
+            context.font = '25px Arial';
+            context.fillText(player.score, canvas.width / 4, canvas.height / 5);
+            context.fillText(computer.score, 3 * canvas.width / 4, canvas.height / 5);
+        }
+
+        // Update positions
+        function update() {
+            ball.x += ball.velocityX;
+            ball.y += ball.velocityY;
+            // Ball collision with top and bottom
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.velocityY = -ball.velocityY;
+            }
+            // Ball collision with paddles
+            let playerPaddle = (ball.x < canvas.width / 2) ? player : computer;
+            if (collision(ball, playerPaddle)) {
+                ball.velocityX = -ball.velocityX;
+            }
+            // Ball reset
+            if (ball.x - ball.radius < 0) {
+                computer.score++;
+                resetBall();
+            } else if (ball.x + ball.radius > canvas.width) {
+                player.score++;
+                resetBall();
+            }
+        }
+
+        function collision(ball, paddle) {
+            return ball.x < paddle.x + paddle.width &&
+                   ball.x + ball.radius > paddle.x &&
+                   ball.y < paddle.y + paddle.height &&
+                   ball.y + ball.radius > paddle.y;
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.velocityX = -ball.velocityX;
+        }
+
+        // Control the player paddle
+        canvas.addEventListener('mousemove', (event) => {
+            let rect = canvas.getBoundingClientRect();
+            player.y = event.clientY - rect.top - player.height / 2;
+        });
+
+        // Game loop
+        function loop() {
+            draw();
+            update();
+            // AI control for computer paddle
+            if (computer.y + computer.height / 2 < ball.y) {
+                computer.y += 4;
+            } else {
+                computer.y -= 4;
+            }
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
